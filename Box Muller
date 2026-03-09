@@ -1,0 +1,36 @@
+Box Muller cartezian
+
+```{r}
+box_muller_cart <- function(n = 10000, mean = 0, sd = 1){
+  out <- numeric(n)
+    for(i in 1:n){
+      u1 <- runif(1)
+      u2 <- runif(1)
+      x1 <- sqrt(-2*log(u1))*cos(2*pi*u2)
+      normala_cu_parametri <- mean+sd*x1
+      out[i] <- normala_cu_parametri
+    }
+    return(out)
+} 
+```
+
+Box Muller Polar
+
+```{r}
+box_muller_pol <- function(n = 10000, mean = 0, sd = 1){
+  out <- numeric(n)
+  for(i in 1:n){
+    k <- 0
+    while(k == 0){
+      u1 <- runif(1, min = -1, max = 1)
+      u2 <- runif(1, min = -1, max = 1)
+      s <- u1^2 + u2^2
+      if(s <= 1)
+        x1 <- u1*sqrt((-2*log(s))/s)
+        out[i] <- mean + sd*x1
+        k <- 1
+    }
+  }
+  return(out)
+}
+```

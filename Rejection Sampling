@@ -1,0 +1,193 @@
+Functia ce vrem a simula:
+
+```{r}
+f_bar_corecta <- function(x){
+  if(x >= 0){
+    out <- (sin(x)**2)*exp(-(x**2)*sqrt(x))
+  }else{
+    out <- 0
+  }
+  return(out)
+}
+
+f_bar <- function(x){
+  out <- (sin(x)**2)*exp(-(x**2)*sqrt(x))
+  return(out)
+}
+```
+
+Simulare cu metoda acceptarii - respingerii; cu ajutorul g1, g2
+
+Pregătirea lui g1
+
+```{r}
+g1 <- function(x){
+  out<- exp(-abs(x))/2
+  return(out)
+}
+
+#folosind teorema de universalitate a repartitiei uniforme, generez n observatii g1
+gen_g1 <- function(n){
+  out <- numeric(n)
+  for(i in 1:n){
+    u <- runif(1)
+    if(u<0.5){
+      out[i] <- log(2*u)
+    }else{
+      out[i] <- -log(2*(1-u))
+    }
+}
+    return(out)
+}
+```
+
+Pregătirea lui g2
+
+```{r}
+g2 <- function(x){
+  out <- 1/(2*pi)*1/(1+x**2/4)
+  return(out)
+}
+
+#folosind teorema de universalitate a repartitiei uniforme, generez n observatii g2
+gen_g2 <- function(n){
+  out <- numeric(n)
+  for(i in 1:n){
+    u <- runif(1)
+    out[i] <- 2*tan(pi*(u - 1/2))
+  }
+    return(out)
+}
+```
+
+Media Teoretică:
+
+```{r}
+
+f_bar_int <- integrate(f_bar, 0, Inf)  #0.259539 with absolute error < 3e-06
+k <- 1/as.numeric(f_bar_int[1])  #constanta de normalizare, 3.852986 with absolute error < 3e-06
+Exp <- function(x){ #aplic formula de transport
+  out <- x*f_bar(x)*k
+  return(out)
+}
+m <- integrate(Exp, 0, Inf)
+m
+```
+
+Estimarea mediei, g1:
+
+```{r}
+t1 <- 1.5  #acest numar asigura t1*g1 > f_bar, pentru orice x
+medie_g1 <- function(n){
+  t <- 1.5
+  out <- numeric(n)
+  for(i in 1:n){
+    k <- 0
+    while(k==0){
+    X <- gen_g1(1)
+    u <- runif(1)
+    m <- t*g1(X)*u
+    if(X>0){  #pas necesar, deoarece f_bar este definita pe (0, inf)
+    if(m <= f_bar(X)){
+      out[i] <- X
+      k<-1
+    }
+    }
+    }
+  }
+  m <- mean(out)
+  return(m)
+}
+medie_g1(200000)
+```
+
+Estimarea mediei, g2:
+
+```{r}
+t2 <- 2.5  #acest numar asigura t2*g2 > f_bar, pentru orice x
+medie_g2 <- function(n){
+  t <- 2.5
+  out <- numeric(n)
+  for(i in 1:n){
+    k <- 0
+    while(k==0){
+    X <- gen_g2(1)
+    u <- runif(1)
+    m <- t*g2(X)*u
+    if(X>0){
+    if(m <= f_bar(X)){
+      out[i] <- X
+      k<-1
+    }
+    }
+    }
+  }
+  m <- mean(out)
+  return(m)
+}
+medie_g2(200000)
+```
+
+Urmatoarele funcții returnează probabilitatea de acceptare obtinută experimental in urma unui număr mare de experimente. Dedesubt, un calcul returnează o aproximare a constantei de normalizare:
+
+# g1
+
+```{r}
+t1 <- 1.5 #acest numar asigura t1*g1 > f_bar, pentru orice x
+prob_acc_g1 <- function(n){
+  t <- 1.5 
+  counter <- numeric(n)
+  for(i in 1:n){
+    k <- 0
+    c0 <- 0
+    while(k==0){
+    c0 <- c0+1
+    X <- gen_g1(1)
+    u <- runif(1)
+    m <- t*g1(X)*u
+    if(X>0){ #pas fundamental, deoarece functia f_bar este definita pe [0, inf)
+    if(m <= f_bar(X)){
+      k<-1
+      counter[i] <- c0
+    }
+    }
+    }
+  }
+  p <- 1/mean(counter)
+  return(p)
+}
+
+constanta_normalizare_1 <- 1/prob_acc_g1(20000)*(1/t1)
+constanta_normalizare_1
+```
+
+# g2
+
+```{r}
+t2 <- 2.5  #acest numar asigura t2*g2 > f_bar, pentru orice x
+prob_acc_g2 <- function(n){
+  t <- 2.5 
+  counter <- numeric(n)
+  for(i in 1:n){
+    k <- 0
+    c0 <- 0
+    while(k==0){
+    c0 <- c0+1
+    X <- gen_g2(1)
+    u <- runif(1)
+    m <- t*g2(X)*u
+    if(X>0){ 
+    if(m <= f_bar(X)){
+      k<-1
+      counter[i] <- c0
+    }
+    }
+    }
+  }
+  p <- 1/mean(counter)
+  return(p)
+}
+  
+constanta_normalizare_2 <- 1/prob_acc_g2(20000)*(1/t2)
+constanta_normalizare_2
+```

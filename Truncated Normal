@@ -1,0 +1,23 @@
+Normala trunchiata la stanga de b:
+
+```{r}
+rtruncnorm <- function(n = 10000, mean = 0, var = 1, b){
+  c_norm <- 1/integrate(function(x) dnorm(x, mean = mean, sd = sqrt(var)), b, Inf)$value
+  NT <- function(x) ifelse(x>b, c_norm*dnorm(x, mean = mean, sd = sqrt(var)), 0)
+  out <- numeric(n)
+  t <- 1/pnorm((mean - b)/sqrt(var))
+  for(i in 1:n){
+    k <- 0
+    while(k == 0){
+    u <- runif(1)
+    X <- rnorm(1, mean = mean, sd = sqrt(var))
+    m <- t*dnorm(X, mean = mean, sd = sqrt(var))*u
+    if(m < NT(X)){
+      k <- 1
+      out[i] <- X
+    }
+    }
+  }
+  return(out)
+  }
+```
